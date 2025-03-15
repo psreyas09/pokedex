@@ -1,0 +1,44 @@
+name: Build Pokedex APK
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip openjdk-17-jdk
+          pip install --upgrade Cython virtualenv buildozer kivy kivymd
+
+      - name: Initialize Buildozer
+        run: |
+          buildozer init
+          sed -i 's/# android.permissions = INTERNET/android.permissions = INTERNET/' buildozer.spec
+          sed -i 's/package.name = myapp/package.name = Pokedex/' buildozer.spec
+          sed -i 's/package.domain = org.test/package.domain = com.batman.pokedex/' buildozer.spec
+
+      - name: Build APK
+        run: buildozer -v android debug
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Pokedex-APK
+          path: bin/*.apk
