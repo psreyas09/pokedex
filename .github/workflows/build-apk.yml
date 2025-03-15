@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout Repository
@@ -35,7 +35,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
-          sudo apt-get install -y libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
+          sudo apt-get install -y libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
+
+          # Manually install libncurses5
+          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libncurses5_6.2-0ubuntu2_amd64.deb
+          sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
+          sudo apt-get install -f
 
       # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
