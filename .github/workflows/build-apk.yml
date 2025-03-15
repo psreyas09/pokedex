@@ -92,7 +92,7 @@ jobs:
       # Step 10: Clean Buildozer Cache
       - name: Clean Buildozer Cache
         run: |
-          buildozer distclean || { echo "Buildozer distclean failed"; exit 1; }
+          echo y | buildozer distclean || { echo "Buildozer distclean failed"; exit 1; }
 
       # Step 11: Build APK
       - name: Build APK
