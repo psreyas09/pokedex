@@ -72,6 +72,10 @@ jobs:
           echo "android.arch = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
+      - name: Verify Buildozer Spec
+        run: |
+          cat buildozer.spec
+
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
