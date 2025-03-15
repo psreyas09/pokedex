@@ -22,7 +22,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip build-essential git zip openjdk-17-jdk wget unzip
+          sudo apt install -y python3-pip build-essential git zip wget unzip openjdk-17-jdk
           pip install --upgrade pip setuptools wheel
           pip install kivy kivymd buildozer cython 
 
@@ -34,21 +34,21 @@ jobs:
           unzip commandlinetools-linux-*.zip -d cmdline-tools
           mv cmdline-tools/cmdline-tools cmdline-tools/latest
 
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-
-          echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
+      - name: Set Android SDK Environment Variables
+        run: |
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
 
       - name: Accept Android Licenses
         run: |
           source $GITHUB_ENV
-          yes | sdkmanager --licenses || true
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Install Required Android SDK Components
         run: |
           source $GITHUB_ENV
-          sdkmanager --install "platform-tools" "build-tools;34.0.0" "platforms;android-34" "cmdline-tools;latest"
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "build-tools;34.0.0" "platforms;android-34" "cmdline-tools;latest"
 
       - name: Initialize Buildozer
         run: |
