@@ -43,6 +43,9 @@ jobs:
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
           sudo apt-get install -y libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
 
+          # Additional headers/libraries often required for Kivy/Buildozer
+          sudo apt-get install -y libgles2-mesa-dev libgl1-mesa-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
           # Clean up unused packages to free disk space
           sudo apt-get autoremove -y
           sudo apt-get clean
@@ -55,7 +58,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install cython==0.29.36 || { echo "Cython installation failed"; exit 1; }
+          pip install cython==3.0.2 || { echo "Cython installation failed"; exit 1; }
           pip install buildozer==1.5.0 python-for-android kivy kivymd requests || { echo "Python dependency installation failed"; exit 1; }
 
           # Clear pip cache to save disk space
@@ -120,6 +123,10 @@ jobs:
       - name: Clean Buildozer Cache
         run: |
           echo y | buildozer distclean || { echo "Buildozer distclean failed"; exit 1; }
+
+          # Remove unnecessary intermediate files
+          rm -rf ~/.local/share/python-for-android
+          rm -rf ./.buildozer/android/platform/build-armeabi-v7a
 
           # Check disk space after cleaning Buildozer cache
           echo "Disk space after cleaning Buildozer cache:"
