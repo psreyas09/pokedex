@@ -11,24 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
+      # Step 3: Cache Python Dependencies
+      - name: Cache Python Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Step 4: Install System Dependencies
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
 
+      # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install kivy kivymd buildozer cython
+          pip install kivy kivymd buildozer cython requests
 
+      # Step 6: Set up Android SDK
       - name: Set up Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -37,34 +51,35 @@ jobs:
           unzip commandlinetools-linux-*.zip -d cmdline-tools
           mv cmdline-tools/cmdline-tools cmdline-tools/latest
           echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
+      # Step 7: Install Android NDK
       - name: Install Android NDK
         run: |
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" --sdk_root=$ANDROID_SDK_ROOT
+          yes | sdkmanager --install "ndk;25.2.9519653" --sdk_root=$ANDROID_SDK_ROOT || { echo "NDK installation failed"; exit 1; }
 
-      - name: Verify NDK Installation
-        run: |
-          ls -l $ANDROID_SDK_ROOT/ndk
-
+      # Step 8: Accept Android Licenses
       - name: Accept Android Licenses
         run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          yes | sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT || true
 
+      # Step 9: Install Minimal Android SDK Components
       - name: Install Android SDK Components
         run: |
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34" "cmdline-tools;latest" "extras;android;m2repository"
+          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK installation failed"; exit 1; }
 
+      # Step 10: Verify AIDL Installation
       - name: Verify AIDL Installation
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
           which aidl || { echo "AIDL not found"; exit 1; }
 
+      # Step 11: Initialize Buildozer
       - name: Initialize Buildozer
         run: |
-          buildozer init
+          buildozer init || { echo "Buildozer initialization failed"; exit 1; }
 
+      # Step 12: Configure Buildozer Spec
       - name: Configure Buildozer Spec
         run: |
           echo "[app]" > buildozer.spec
@@ -72,7 +87,7 @@ jobs:
           echo "package.name = pokedex" >> buildozer.spec
           echo "package.domain = org.example" >> buildozer.spec
           echo "source.dir = ." >> buildozer.spec
-          echo "version = 1.0.0" >> buildozer.spec
+          echo "version = ${{ github.ref_name }}" >> buildozer.spec
           echo "requirements = kivy, kivymd, requests" >> buildozer.spec
           echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
           echo "android.accept_sdk_license = True" >> buildozer.spec
@@ -82,15 +97,23 @@ jobs:
           echo "android.arch = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
+      # Step 13: Verify Buildozer Spec
       - name: Verify Buildozer Spec
         run: |
           cat buildozer.spec
 
+      # Step 14: Build APK
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
-          buildozer -v android debug
+          buildozer -v android debug || { echo "APK build failed"; exit 1; }
 
+      # Step 15: Verify APK Exists
+      - name: Verify APK Exists
+        run: |
+          ls bin/*.apk || { echo "APK not found"; exit 1; }
+
+      # Step 16: Upload APK Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
