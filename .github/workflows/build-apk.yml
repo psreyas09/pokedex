@@ -1,12 +1,10 @@
-name: Build Pokedex APK
+name: Build APK
 
 on:
   push:
     branches:
-      - main
+      - main  # Change this if your branch name is different
   pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -16,28 +14,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set Up Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-17-jdk
-          pip install --upgrade Cython virtualenv buildozer kivy kivymd
+          sudo apt install -y python3-pip build-essential git
+          pip install --upgrade pip setuptools wheel
+          pip install kivy kivymd buildozer cython 
 
-      - name: Initialize Buildozer
+      - name: Install Android SDK and NDK
         run: |
-          buildozer init
-          sed -i 's/# android.permissions = INTERNET/android.permissions = INTERNET/' buildozer.spec
-          sed -i 's/package.name = myapp/package.name = Pokedex/' buildozer.spec
-          sed -i 's/package.domain = org.test/package.domain = com.batman.pokedex/' buildozer.spec
+          sudo apt install -y openjdk-17-jdk
+          pip install --upgrade buildozer
+          sudo apt install -y zipalign
 
       - name: Build APK
-        run: buildozer -v android debug
+        run: |
+          buildozer init
+          buildozer -v android debug
 
-      - name: Upload APK as Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: Pokedex-APK
