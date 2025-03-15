@@ -35,7 +35,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
-          sudo apt-get install -y libffi-dev libssl-dev libncurses5 libncurses5-dev libbz2-dev liblzma-dev zlib1g-dev
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu focal main"
+          sudo apt-get update
+          sudo apt-get install -y libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
 
       # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
