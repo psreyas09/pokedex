@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1  # Ensure shallow clone to avoid unnecessary history
+          fetch-depth: 1  
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,6 +28,13 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install kivy kivymd buildozer cython 
 
+      - name: Install Android SDK & Aidl
+        run: |
+          sudo apt install -y android-sdk adb
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH
+          sdkmanager --install "platform-tools" "build-tools;34.0.0" "platforms;android-34" "cmdline-tools;latest"
+
       - name: Initialize Buildozer
         run: buildozer init
 
@@ -35,7 +42,7 @@ jobs:
         run: buildozer -v android debug
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4  # UPDATED VERSION
+        uses: actions/upload-artifact@v4
         with:
           name: Pokedex-APK
           path: bin/*.apk
