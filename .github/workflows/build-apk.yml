@@ -50,7 +50,7 @@ jobs:
       - name: Verify AIDL Installation
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
-          which aidl || echo "AIDL not found"
+          which aidl || { echo "AIDL not found"; exit 1; }
 
       - name: Initialize Buildozer
         run: |
