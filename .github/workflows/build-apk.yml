@@ -36,17 +36,53 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
           sudo apt-get install -y software-properties-common
+
+      # Step 5: Add and Verify Focal Repository
+      - name: Add Focal Repository
+        run: |
           sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu focal main"
           sudo apt-get update
-          sudo apt-get install -y -t focal libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
 
-      # Step 5: Install Python Dependencies
+      - name: List Repositories
+        run: |
+          cat /etc/apt/sources.list
+          ls -l /etc/apt/sources.list.d/
+
+      # Step 6: Install libncurses5
+      - name: Install libncurses5 from Focal
+        run: |
+          sudo apt-get install -y -t focal libncurses5
+
+      - name: Pin Focal Repository for libncurses5
+        run: |
+          echo 'Package: libncurses5' | sudo tee /etc/apt/preferences.d/libncurses5-pin
+          echo 'Pin: release n=focal' | sudo tee -a /etc/apt/preferences.d/libncurses5-pin
+          echo 'Pin-Priority: 1001' | sudo tee -a /etc/apt/preferences.d/libncurses5-pin
+          sudo apt-get update
+          sudo apt-get install -y libncurses5
+
+      - name: Manually Install libncurses5
+        run: |
+          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libncurses5_6.2-0ubuntu2_amd64.deb
+          sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
+          sudo apt-get install -f
+
+      - name: Verify libncurses5 Installation
+        run: |
+          dpkg -l | grep libncurses5 || { echo "libncurses5 installation failed"; exit 1; }
+
+      # Step 7: Install Remaining Dependencies
+      - name: Install Additional Dependencies
+        run: |
+          sudo apt-get install -y libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
+
+      # Step 8: Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
           pip install --upgrade buildozer python-for-android cython requests
 
-      # Step 6: Set up Android SDK and NDK
+      # Step 9: Set up Android SDK and NDK
       - name: Set up Android SDK and NDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -63,17 +99,17 @@ jobs:
           # Install required components
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-31" || { echo "SDK/NDK installation failed"; exit 1; }
 
-      # Step 7: Accept Android Licenses
+      # Step 10: Accept Android Licenses
       - name: Accept Android Licenses
         run: |
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      # Step 8: Initialize Buildozer
+      # Step 11: Initialize Buildozer
       - name: Initialize Buildozer
         run: |
           buildozer init || { echo "Buildozer initialization failed"; exit 1; }
 
-      # Step 9: Configure Buildozer Spec
+      # Step 12: Configure Buildozer Spec
       - name: Configure Buildozer Spec
         run: |
           echo "[app]" > buildozer.spec
@@ -92,23 +128,23 @@ jobs:
           echo "android.archs = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
-      # Step 10: Clean Buildozer Cache
+      # Step 13: Clean Buildozer Cache
       - name: Clean Buildozer Cache
         run: |
           buildozer clean
 
-      # Step 11: Build APK
+      # Step 14: Build APK
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
           buildozer -v android debug --log_level=2 || { echo "APK build failed"; exit 1; }
 
-      # Step 12: Verify APK Exists
+      # Step 15: Verify APK Exists
       - name: Verify APK Exists
         run: |
           ls bin/*.apk || { echo "APK not found"; exit 1; }
 
-      # Step 13: Upload APK Artifact
+      # Step 16: Upload APK Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
