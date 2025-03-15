@@ -14,6 +14,7 @@ jobs:
       # Step 0: Check Disk Space
       - name: Check Disk Space
         run: |
+          echo "Initial disk space:"
           df -h
 
       # Step 1: Checkout Repository
@@ -42,12 +43,27 @@ jobs:
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
           sudo apt-get install -y libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
 
+          # Clean up unused packages to free disk space
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+
+          # Check disk space after installing dependencies
+          echo "Disk space after installing system dependencies:"
+          df -h
+
       # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
           pip install cython==0.29.36 || { echo "Cython installation failed"; exit 1; }
           pip install buildozer==1.5.0 python-for-android kivy kivymd requests || { echo "Python dependency installation failed"; exit 1; }
+
+          # Clear pip cache to save disk space
+          rm -rf ~/.cache/pip
+
+          # Check disk space after installing Python dependencies
+          echo "Disk space after installing Python dependencies:"
+          df -h
 
       # Step 6: Set up Android SDK and NDK
       - name: Set up Android SDK and NDK
@@ -66,17 +82,22 @@ jobs:
           # Install required components
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-31" || { echo "SDK/NDK installation failed"; exit 1; }
 
-      # Step 7: Accept Android Licenses
-      - name: Accept Android Licenses
-        run: |
+          # Accept licenses (if not already accepted)
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      # Step 8: Initialize Buildozer
+          # Clean up downloaded SDK tools to save disk space
+          rm -rf $HOME/android-sdk/cmdline-tools/commandlinetools-linux-*.zip
+
+          # Check disk space after setting up Android SDK/NDK
+          echo "Disk space after setting up Android SDK/NDK:"
+          df -h
+
+      # Step 7: Initialize Buildozer
       - name: Initialize Buildozer
         run: |
           buildozer init || { echo "Buildozer initialization failed"; exit 1; }
 
-      # Step 9: Configure Buildozer Spec
+      # Step 8: Configure Buildozer Spec
       - name: Configure Buildozer Spec
         run: |
           echo "[app]" > buildozer.spec
@@ -95,25 +116,35 @@ jobs:
           echo "android.archs = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
-      # Step 10: Clean Buildozer Cache
+      # Step 9: Clean Buildozer Cache
       - name: Clean Buildozer Cache
         run: |
           echo y | buildozer distclean || { echo "Buildozer distclean failed"; exit 1; }
 
-      # Step 11: Build APK
+          # Check disk space after cleaning Buildozer cache
+          echo "Disk space after cleaning Buildozer cache:"
+          df -h
+
+      # Step 10: Build APK
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
           buildozer -v android debug --log_level=2 || { echo "APK build failed"; exit 1; }
 
-      # Step 12: Verify APK Exists
+      # Step 11: Verify APK Exists
       - name: Verify APK Exists
         run: |
           ls bin/*.apk || { echo "APK not found"; exit 1; }
 
-      # Step 13: Upload APK Artifact
+      # Step 12: Upload APK Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Pokedex-APK
           path: bin/*.apk
+
+      # Step 13: Final Disk Space Check
+      - name: Final Disk Space Check
+        run: |
+          echo "Final disk space after completing the workflow:"
+          df -h
