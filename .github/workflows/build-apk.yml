@@ -40,10 +40,10 @@ jobs:
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install kivy kivymd buildozer cython requests
+          pip install --upgrade buildozer python-for-android cython requests
 
-      # Step 6: Set up Android SDK
-      - name: Set up Android SDK
+      # Step 6: Set up Android SDK and NDK
+      - name: Set up Android SDK and NDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk
@@ -53,33 +53,19 @@ jobs:
           echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
           echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
-      # Step 7: Install Android NDK
-      - name: Install Android NDK
-        run: |
-          yes | sdkmanager --install "ndk;25.2.9519653" --sdk_root=$ANDROID_SDK_ROOT || { echo "NDK installation failed"; exit 1; }
+          yes | sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK/NDK installation failed"; exit 1; }
 
-      # Step 8: Accept Android Licenses
+      # Step 7: Accept Android Licenses
       - name: Accept Android Licenses
         run: |
           yes | sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT || true
 
-      # Step 9: Install Minimal Android SDK Components
-      - name: Install Android SDK Components
-        run: |
-          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK installation failed"; exit 1; }
-
-      # Step 10: Verify AIDL Installation
-      - name: Verify AIDL Installation
-        run: |
-          export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
-          which aidl || { echo "AIDL not found"; exit 1; }
-
-      # Step 11: Initialize Buildozer
+      # Step 8: Initialize Buildozer
       - name: Initialize Buildozer
         run: |
           buildozer init || { echo "Buildozer initialization failed"; exit 1; }
 
-      # Step 12: Configure Buildozer Spec
+      # Step 9: Configure Buildozer Spec
       - name: Configure Buildozer Spec
         run: |
           echo "[app]" > buildozer.spec
@@ -92,28 +78,22 @@ jobs:
           echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
           echo "android.accept_sdk_license = True" >> buildozer.spec
           echo "android.skip_update = False" >> buildozer.spec
-          echo "android.sdk = 34" >> buildozer.spec
-          echo "android.ndk = 25.2.9519653" >> buildozer.spec
-          echo "android.arch = armeabi-v7a" >> buildozer.spec
+          echo "android.ndk_version = 25b" >> buildozer.spec
+          echo "android.archs = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
-      # Step 13: Verify Buildozer Spec
-      - name: Verify Buildozer Spec
-        run: |
-          cat buildozer.spec
-
-      # Step 14: Build APK
+      # Step 10: Build APK
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
           buildozer -v android debug || { echo "APK build failed"; exit 1; }
 
-      # Step 15: Verify APK Exists
+      # Step 11: Verify APK Exists
       - name: Verify APK Exists
         run: |
           ls bin/*.apk || { echo "APK not found"; exit 1; }
 
-      # Step 16: Upload APK Artifact
+      # Step 12: Upload APK Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
