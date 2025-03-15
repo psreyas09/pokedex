@@ -35,6 +35,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
+          sudo apt-get install -y libffi-dev libssl-dev libncurses5 libncurses5-dev libbz2-dev liblzma-dev zlib1g-dev
 
       # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
@@ -57,7 +58,7 @@ jobs:
           ls -l $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager || { echo "sdkmanager not found"; exit 1; }
 
           # Install required components
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK/NDK installation failed"; exit 1; }
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-31" || { echo "SDK/NDK installation failed"; exit 1; }
 
       # Step 7: Accept Android Licenses
       - name: Accept Android Licenses
@@ -83,21 +84,28 @@ jobs:
           echo "android.accept_sdk_license = True" >> buildozer.spec
           echo "android.skip_update = False" >> buildozer.spec
           echo "android.ndk_version = 25b" >> buildozer.spec
+          echo "android.api = 31" >> buildozer.spec
+          echo "android.minapi = 21" >> buildozer.spec
           echo "android.archs = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
-      # Step 10: Build APK
+      # Step 10: Clean Buildozer Cache
+      - name: Clean Buildozer Cache
+        run: |
+          buildozer clean
+
+      # Step 11: Build APK
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
-          buildozer -v android debug || { echo "APK build failed"; exit 1; }
+          buildozer -v android debug --log_level=2 || { echo "APK build failed"; exit 1; }
 
-      # Step 11: Verify APK Exists
+      # Step 12: Verify APK Exists
       - name: Verify APK Exists
         run: |
           ls bin/*.apk || { echo "APK not found"; exit 1; }
 
-      # Step 12: Upload APK Artifact
+      # Step 13: Upload APK Artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
