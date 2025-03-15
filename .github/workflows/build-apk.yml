@@ -56,6 +56,20 @@ jobs:
         run: |
           buildozer init
 
+      - name: Configure Buildozer Spec
+        run: |
+          echo "[app]" > buildozer.spec
+          echo "title = Pokedex" >> buildozer.spec
+          echo "package.name = pokedex" >> buildozer.spec
+          echo "package.domain = org.example" >> buildozer.spec
+          echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
+          echo "android.accept_sdk_license = True" >> buildozer.spec
+          echo "android.skip_update = False" >> buildozer.spec
+          echo "android.sdk = 34" >> buildozer.spec
+          echo "android.ndk = 25b" >> buildozer.spec
+          echo "android.arch = armeabi-v7a" >> buildozer.spec
+          echo "android.permissions = INTERNET" >> buildozer.spec
+
       - name: Build APK
         run: |
           export PATH=$ANDROID_SDK_ROOT/build-tools/34.0.0:$PATH
