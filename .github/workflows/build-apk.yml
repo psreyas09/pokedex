@@ -37,12 +37,16 @@ jobs:
           unzip commandlinetools-linux-*.zip -d cmdline-tools
           mv cmdline-tools/cmdline-tools cmdline-tools/latest
           echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/25b" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install Android NDK
         run: |
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;25b"
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;25.2.9519653"
+
+      - name: Verify NDK Installation
+        run: |
+          ls -l $ANDROID_SDK_ROOT/ndk
 
       - name: Accept Android Licenses
         run: |
@@ -74,7 +78,7 @@ jobs:
           echo "android.accept_sdk_license = True" >> buildozer.spec
           echo "android.skip_update = False" >> buildozer.spec
           echo "android.sdk = 34" >> buildozer.spec
-          echo "android.ndk = 25b" >> buildozer.spec
+          echo "android.ndk = 25.2.9519653" >> buildozer.spec
           echo "android.arch = armeabi-v7a" >> buildozer.spec
           echo "android.permissions = INTERNET" >> buildozer.spec
 
