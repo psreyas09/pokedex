@@ -46,19 +46,23 @@ jobs:
       - name: Set up Android SDK and NDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk
+          cd $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip commandlinetools-linux-*.zip -d cmdline-tools
-          mv cmdline-tools/cmdline-tools cmdline-tools/latest
+          unzip commandlinetools-linux-*.zip
+          mv cmdline-tools latest
           echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
           echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
-          yes | sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK/NDK installation failed"; exit 1; }
+          # Verify sdkmanager exists
+          ls -l $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager || { echo "sdkmanager not found"; exit 1; }
+
+          # Install required components
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "platform-tools" "build-tools;34.0.0" "platforms;android-34" || { echo "SDK/NDK installation failed"; exit 1; }
 
       # Step 7: Accept Android Licenses
       - name: Accept Android Licenses
         run: |
-          yes | sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT || true
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
       # Step 8: Initialize Buildozer
       - name: Initialize Buildozer
