@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       # Step 1: Checkout Repository
@@ -35,18 +35,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libstdc++6 python3-pip git zip wget unzip openjdk-17-jdk
-          sudo apt-get install -y libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
-
-          # Manually install libncurses5
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libncurses5_6.2-0ubuntu2_amd64.deb
-          sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
-          sudo apt-get install -f
+          sudo apt-get install -y libncurses5 libffi-dev libssl-dev libbz2-dev liblzma-dev zlib1g-dev
 
       # Step 5: Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install --upgrade buildozer python-for-android cython requests
+          pip install buildozer==1.5.0 python-for-android cython requests
 
       # Step 6: Set up Android SDK and NDK
       - name: Set up Android SDK and NDK
@@ -97,7 +92,7 @@ jobs:
       # Step 10: Clean Buildozer Cache
       - name: Clean Buildozer Cache
         run: |
-          buildozer clean
+          buildozer distclean || { echo "Buildozer distclean failed"; exit 1; }
 
       # Step 11: Build APK
       - name: Build APK
