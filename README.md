@@ -33,8 +33,7 @@ A simple Pokédex application built with Python and KivyMD. This app allows user
 ## API Usage
 This application fetches Pokémon data using the [PokéAPI](https://pokeapi.co/).
 
-## Screenshots
-_Add screenshots here_
+
 
 ## Contributing
 Feel free to fork this repository, make improvements, and submit pull requests.
